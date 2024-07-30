@@ -1,0 +1,19 @@
+training:
+  max_steps: 100000
+  pix2pix_disc_weight: 0.5
+
+eval:
+  output_path: ""
+  log_freq: 10
+  val_freq: 2000
+
+data:
+  train_data_path: ""
+  val_data_path:  ""
+  batch_size: 8
+  im_size: 256
+  ch_in: [0]  
+
+neptune:
+  name: ""
+  project: ""
