@@ -1,4 +1,5 @@
 import tensorflow as tf
+
 from virvs.data.npy_dataloader import NpyDataloader
 
 
@@ -11,7 +12,11 @@ def prepare_dataset(
 ):
 
     dataloader = NpyDataloader(
-        path=path, im_size=im_size, random_jitter=random_jitter, ch_in=ch_in
+        path=path,
+        im_size=im_size,
+        random_jitter=random_jitter,
+        ch_in=ch_in,
+        crop_type="random",
     )
     dataset = tf.data.Dataset.from_generator(
         dataloader,

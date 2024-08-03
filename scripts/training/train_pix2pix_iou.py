@@ -16,7 +16,10 @@ from virvs.configs.utils import (
     load_config_from_yaml,
 )
 from virvs.utils.evaluation_utils import (
+    calculate_acc,
     calculate_iou,
+    calculate_prec,
+    calculate_rec,
     get_masks_to_show,
     get_mean_per_mask,
 )
@@ -141,7 +144,9 @@ def main():
 
     dataset = dataset.shuffle(5000)
     # val_dataset = val_dataset.shuffle(5000)
-    masks = np.load("/bigdata/casus/MLID/maria/VIRVS_data/HADV/processed/val/masks.npy")
+    masks = np.load(
+        "/bigdata/casus/MLID/maria/VIRVS_data/masks/masks_cell_hadv_val.npy"
+    )
 
     dataset = dataset.batch(batch_size)
     val_dataset = val_dataset.batch(1)
@@ -215,6 +220,8 @@ def main():
                     run[f"train_loss_l1"].log((cumulative_loss[2]) / log_freq)
                     run[f"train_loss_disc_total"].log((cumulative_loss[3]) / log_freq)
                     cumulative_loss = np.zeros(4)
+                    for k, v in metrics.items():
+                        train_metrics[k] /= log_freq
                     log_metrics(run, train_metrics, prefix="train")
                     train_metrics = defaultdict(float)
 
@@ -230,7 +237,7 @@ def main():
                 )
                 generator_val.set_weights(weights)
 
-                ious = []
+                ious, accs, precs, recs = [], [], [], []
                 for n, batch in enumerate(val_dataset):
                     batch_x, batch_y = batch
                     output = generator_val(batch_x, training=True)
@@ -248,6 +255,12 @@ def main():
                             continue
                         iou = calculate_iou(pred_masks, gt_masks)
                         ious.append(iou)
+                        acc = calculate_acc(pred_masks, gt_masks)
+                        accs.append(acc)
+                        prec = calculate_rec(pred_masks, gt_masks, np.sum(mask == 0))
+                        precs.append(prec)
+                        rec = calculate_prec(pred_masks, gt_masks, np.sum(mask == 0))
+                        recs.append(rec)
 
                     metrics = calculate_metrics(output, batch_y.numpy())
                     for k, v in metrics.items():
@@ -257,6 +270,9 @@ def main():
                     val_metrics[k] = val_metrics[k] / (n + 1)
 
                 val_metrics["iou"] = np.mean(np.array(ious))
+                val_metrics["acc"] = np.mean(np.array(accs))
+                val_metrics["prec"] = np.mean(np.array(precs))
+                val_metrics["rec"] = np.mean(np.array(recs))
 
                 log_metrics(run, val_metrics, prefix="val")
                 # if len(channels_in) == 2:

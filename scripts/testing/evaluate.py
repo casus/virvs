@@ -7,6 +7,7 @@ from tqdm import tqdm
 
 from virvs.architectures.pix2pix import Generator
 from virvs.data.npy_dataloader import NpyDataloader
+from virvs.utils.evaluation_utils import round_to_1
 from virvs.utils.metrics_utils import calculate_metrics
 
 
@@ -33,42 +34,22 @@ DATASETS = {
 
 WEIGHTS = {
     "pix2pix": {
-        "hadv_2ch": "model_100000_316674a2-4299-4a06-b601-5e20f7dd02a6.h5",
-        "hadv_1ch": "model_100000_d6792b38-8091-448d-a26a-ef08375b8dbe.h5",
-        "vacv": "model_100000_138fd26a-88b9-4d2a-9f96-6a2ffe991364.h5",
-        "iav": "model_100000_ef994584-7730-41b9-9a56-75d478bacf02.h5",
-        "hsv": "model_100000_52d604f6-25fe-4d42-a212-cef281e3a8b5.h5",
-        "rv": "model_100000_a6bd97a2-d889-40a4-a8ec-5c8816797f9d.h5",
+        "hadv_2ch": "model_200000_38527895-6967-4f7b-a5df-eb6564b47ad9.h5",
+        "hadv_1ch": "model_200000_63065c3c-b6bd-4a38-a5b9-9d9ae5083129.h5",
+        "vacv": "model_200000_8b365816-a14c-4279-885f-f61db645e786.h5",
+        "iav": "model_200000_fbc9c491-14a6-4ed4-a02d-daefd99fd60e.h5",
+        "hsv": "model_200000_afb8f712-ae29-404e-bcd9-a06786e5952b.h5",
+        "rv": "model_200000_964056e1-a1e3-4c4f-9e9e-21112f54453a.h5",
     },
     "unet": {
-        "hadv_2ch": "model_100000_c0175f01-1e6e-4bec-9f2e-2e5542c16584.h5",
-        "hadv_1ch": "model_100000_47b9346c-e143-4bf7-9dce-40aa6f2329e5.h5",
-        "vacv": "model_100000_4f91526f-a1b4-4057-926e-073f4ffbef67.h5",
-        "iav": "model_100000_26c5b8b9-0c35-4fee-9eac-44a857cebe76.h5",
-        "hsv": "model_100000_1b8e6e99-10fa-4221-b53a-b680a65826be.h5",
-        "rv": "model_100000_0ca537f4-cbd8-4722-89cb-bdd43107a66b.h5",
+        "hadv_2ch": "model_200000_633f9e8a-0c3b-4678-9a67-ec351fdf09de.h5",
+        "hadv_1ch": "model_200000_b301ae59-b3a9-4faf-9ae1-e3b805712147.h5",
+        "vacv": "model_200000_d6b695f9-fa90-4ce2-ba99-958078cabd52.h5",
+        "iav": "model_200000_868408c5-7b76-412b-9a8d-faf4812ed96f.h5",
+        "hsv": "model_200000_1d7dded0-481b-4a29-b3d5-16899f219b6e.h5",
+        "rv": "model_200000_d88881a7-e0c3-455f-bb5d-521cfbb98329.h5",
     },
 }
-# Old weights
-# BASE_PATH = "/home/wyrzyk93/DeepStain/outputs/weights/"
-# WEIGHTS = {
-#     "pix2pix": {
-#         "vacv": "model_100000_4a9069f2-fb18-452f-a640-7905b9b8bc64.h5",
-#         "hadv_ch1": "model_100000_07fb9e88-c4d9-4e3e-a8b6-a29b83e296d4.h5",
-#         "hadv_ch2": "model_100000_ed42c2b8-fe12-404b-9809-29af727152d4.h5",
-#         "hsv": "model_100000_ebacbaa5-9853-48dd-8bfd-0f0ceac7e821.h5",
-#         "iav": "model_100000_2e1adf77-d170-49c3-a200-65a05d674538.h5",
-#         "rhv": "model_100000_245fe85a-d441-44fd-948c-9901528001eb.h5",
-#     },
-#     "unet": {
-#         "vacv": "model_100000_4fc3954d-a38b-426d-a8af-5d1ddf0e43cd.h5",
-#         "hadv_ch1": "model_100000_cb702c2c-0860-4056-9966-a0dcfd9175c4.h5",
-#         "hadv_ch2": "model_100000_55173f8e-1af8-4023-9724-aee237039d21.h5",
-#         "hsv": "model_100000_7509c432-114f-437b-b448-2d34607c5212.h5",
-#         "iav": "model_100000_37bacaaf-b76a-428c-bd38-51fb3f63e85b.h5",
-#         "rhv": "model_100000_fcf1260e-b12e-4d6a-9a59-76a3bd296bdb.h5",
-#     },
-# }
 
 
 def eval(size, ch_in, dropout, model, virus, threshold):
@@ -137,10 +118,9 @@ for virus in DATASETS.keys():
             test_metrics = eval(size, ch_in, dropout, model, virus, threshold)
 
             for key, value in test_metrics.items():
-                print(f"{key}: {value:.5f}")
+                print(f"{key}: {round(value, 3)}")
 
         else:
-            # seeds = [42, 43, 44, 45, 46, 47, 48, 49, 50, 51]
             seeds = [42, 43, 44]
 
             all_seeds_metrics = defaultdict(list)
@@ -157,4 +137,6 @@ for virus in DATASETS.keys():
                 results[k] = {"mean": mean_metric, "std": std_metric}
 
             for key, value in results.items():
-                print(f"{key}: mean = {value['mean']:.5f}, std = {value['std']:.5f}")
+                print(
+                    f"{key}: mean = {round(value['mean'], 3)}, std = {round_to_1(value['std']):.1e}"
+                )
