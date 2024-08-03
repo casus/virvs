@@ -3,17 +3,17 @@ training:
   pix2pix_disc_weight: 0.5
     
 eval:
-  output_path: ""
+  output_path: "outputs/"
   log_freq: 10
   val_freq: 2000
 
 data:
-  train_data_path: ""
-  val_data_path:  ""
+  train_data_path: "/bigdata/casus/MLID/maria/VIRVS_data/RV/processed/train"
+  val_data_path:  "/bigdata/casus/MLID/maria/VIRVS_data/RV/processed/val"
   batch_size: 8
   im_size: 256
   ch_in: [0]  
 
 neptune:
-  name: ""
-  project: ""
+  name: "Virtual_Stain"
+  project: "mlid/test"

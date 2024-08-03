@@ -2,6 +2,7 @@ from collections import defaultdict
 
 import numpy as np
 from skimage.metrics import structural_similarity
+
 from virvs.utils.metrics_utils import calculate_metrics
 
 
@@ -35,6 +36,22 @@ def calculate_cell_precision(masks_pred, mask_gt, new_pred_mask):
     tp_mask = ((masks_pred * new_pred_mask) != 0) & ((masks_pred * mask_gt) != 0)
     tp_cellcount = np.unique(masks_pred[tp_mask]).size
     return tp_cellcount / (tp_cellcount + fp_cellcount + 1e-6)
+
+
+def calculate_rec(mask_gt, mask_pred, background_px):
+    false_negatives, false_positives, true_negatives, true_positives = get_stats(
+        mask_gt, mask_pred, background_px
+    )
+    return true_positives / (true_positives + false_negatives + 1e-6)
+
+
+def calculate_cell_rec(masks_pred, mask_gt, new_pred_mask):
+    fn_mask = ((masks_pred * new_pred_mask) == 0) & ((masks_pred * mask_gt) != 0)
+    fn_cellcount = np.unique(masks_pred[fn_mask]).size
+
+    tp_mask = ((masks_pred * new_pred_mask) != 0) & ((masks_pred * mask_gt) != 0)
+    tp_cellcount = np.unique(masks_pred[tp_mask]).size
+    return tp_cellcount / (tp_cellcount + fn_cellcount + 1e-6)
 
 
 def get_stats(mask_gt, mask_pred, background_px):

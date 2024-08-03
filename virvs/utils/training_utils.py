@@ -15,11 +15,10 @@ def prepare_dataset(
     )
     dataset = tf.data.Dataset.from_generator(
         dataloader,
-        output_types=(tf.float32, tf.float32, tf.float32),
+        output_types=(tf.float32, tf.float32),
         output_shapes=(
             [im_size, im_size, len(ch_in)],
             [im_size, im_size, ch_out],
-            [im_size, im_size, 1],
         ),
     )
     return dataset

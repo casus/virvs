@@ -1,6 +1,7 @@
 from collections import defaultdict
 
 import numpy as np
+import tensorflow as tf
 from tqdm import tqdm
 from virvs.data.npy_dataloader import NpyDataloader
 from virvs.utils.evaluation_utils import (
@@ -14,6 +15,8 @@ from virvs.utils.evaluation_utils import (
     get_masks_to_show,
     get_mean_per_mask,
 )
+
+tf.keras.utils.set_random_seed(42)
 
 outputs = np.load(f"")
 cellpose_outputs = np.load(f"")

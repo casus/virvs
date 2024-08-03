@@ -6,6 +6,7 @@ import neptune as neptune
 import numpy as np
 import tensorflow as tf
 from skimage.util import montage
+
 from virvs.architectures.pix2pix import Discriminator, Generator
 from virvs.configs.utils import (
     create_data_config,
@@ -13,6 +14,11 @@ from virvs.configs.utils import (
     create_neptune_config,
     create_training_config,
     load_config_from_yaml,
+)
+from virvs.utils.evaluation_utils import (
+    calculate_iou,
+    get_masks_to_show,
+    get_mean_per_mask,
 )
 from virvs.utils.inference_utils import log_metrics, save_output_montage, save_weighs
 from virvs.utils.metrics_utils import calculate_metrics
@@ -83,6 +89,14 @@ def train_step(
     return gen_output, gen_total_loss, gen_loss, gen_l1_loss, disc_total_loss
 
 
+def prepare_highlighted_masks(masks, gfp):
+    pred_weights = (np.squeeze(gfp).flatten() > -0.9).astype(np.float32)
+    mean_per_mask = get_mean_per_mask(masks, pred_weights)
+    masks_to_show = get_masks_to_show(mean_per_mask, 0.5)
+    new_mask = np.isin(masks, masks_to_show)
+    return new_mask
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -118,7 +132,7 @@ def main():
     )
     val_dataset = prepare_dataset(
         path=data_config.val_data_path,
-        im_size=data_config.im_size,
+        im_size=2048,
         ch_in=channels_in,
         ch_out=channels_out,
     )
@@ -126,10 +140,11 @@ def main():
     batch_size = data_config.batch_size
 
     dataset = dataset.shuffle(5000)
-    val_dataset = val_dataset.shuffle(5000)
+    # val_dataset = val_dataset.shuffle(5000)
+    masks = np.load("/bigdata/casus/MLID/maria/VIRVS_data/HADV/processed/val/masks.npy")
 
     dataset = dataset.batch(batch_size)
-    val_dataset = val_dataset.batch(batch_size)
+    val_dataset = val_dataset.batch(1)
 
     generator = Generator(
         data_config.im_size,
@@ -161,7 +176,7 @@ def main():
     step = 0
 
     log_freq = eval_config.log_freq
-    val_freq = eval_config.val_freq
+    val_freq = 2000
     max_steps = training_config.max_steps
 
     run_id = str(uuid.uuid4())
@@ -206,9 +221,33 @@ def main():
             if step % val_freq == 0:
                 val_metrics = defaultdict(float)
 
+                weights = generator.get_weights()
+                generator_val = Generator(
+                    2048,
+                    ch_in=channels_in,
+                    ch_out=channels_out,
+                    apply_batchnorm=True,
+                )
+                generator_val.set_weights(weights)
+
+                ious = []
                 for n, batch in enumerate(val_dataset):
                     batch_x, batch_y = batch
-                    output = generator(batch_x, training=True)
+                    output = generator_val(batch_x, training=True)
+                    for i in range(len(batch_x)):
+                        mask = masks[n + i]
+                        gt_masks = prepare_highlighted_masks(
+                            mask.flatten(),
+                            batch_y[i].numpy().flatten(),
+                        )
+                        pred_masks = prepare_highlighted_masks(
+                            mask.flatten(),
+                            output[i].numpy().flatten(),
+                        )
+                        if np.sum(gt_masks) == 0:
+                            continue
+                        iou = calculate_iou(pred_masks, gt_masks)
+                        ious.append(iou)
 
                     metrics = calculate_metrics(output, batch_y.numpy())
                     for k, v in metrics.items():
@@ -217,37 +256,39 @@ def main():
                 for k, v in val_metrics.items():
                     val_metrics[k] = val_metrics[k] / (n + 1)
 
-                log_metrics(run, val_metrics, prefix="val")
-                if len(channels_in) == 2:
-                    montage_content = np.concatenate(
-                        (
-                            output,
-                            batch_y,
-                            batch_x[..., 0:1],
-                            batch_x[..., 1:2],
-                        ),
-                        axis=2,
-                    )
-                else:
-                    montage_content = np.concatenate(
-                        (
-                            output,
-                            batch_y,
-                            batch_x[..., 0:1],
-                        ),
-                        axis=2,
-                    )
+                val_metrics["iou"] = np.mean(np.array(ious))
 
-                output_montage = montage(np.squeeze(montage_content))
-                output_montage = np.uint8(output_montage * 127.5 + 127.5)
-                save_output_montage(
-                    run=run,
-                    output_montage=output_montage,
-                    epoch=step,
-                    output_path=output_path,
-                    run_id=run_id,
-                    prefix="val",
-                )
+                log_metrics(run, val_metrics, prefix="val")
+                # if len(channels_in) == 2:
+                #     montage_content = np.concatenate(
+                #         (
+                #             output,
+                #             batch_y,
+                #             batch_x[..., 0:1],
+                #             batch_x[..., 1:2],
+                #         ),
+                #         axis=2,
+                #     )
+                # else:
+                #     montage_content = np.concatenate(
+                #         (
+                #             output,
+                #             batch_y,
+                #             batch_x[..., 0:1],
+                #         ),
+                #         axis=2,
+                #     )
+
+                # output_montage = montage(np.squeeze(montage_content))
+                # output_montage = np.uint8(output_montage * 127.5 + 127.5)
+                # save_output_montage(
+                #     run=run,
+                #     output_montage=output_montage,
+                #     epoch=step,
+                #     output_path=output_path,
+                #     run_id=run_id,
+                #     prefix="val",
+                # )
 
             if step == max_steps:
                 if run is not None:

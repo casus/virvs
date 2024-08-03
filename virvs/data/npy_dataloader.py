@@ -14,6 +14,7 @@ def crop(x, center_x, center_y, im_size):
 
     return x
 
+
 def center_crop(x, crop_size):
     x_center = x.shape[1] // 2
     y_center = x.shape[0] // 2
@@ -34,19 +35,12 @@ class NpyDataloader:
         crop_type="random",
     ):
 
-        self._x = []
-        self._y = []
-        filenames = [f for f in listdir(join(path, "x")) if isfile(join(path, "x", f))]
-        for f in filenames:
-            input = tif.imread(join(path, "x", f))
-            if len(ch_in) == 1:
-                input = input[:, :, ch_in[0] : ch_in[0] + 1]
+        self._x = np.load(join(path, "x.npy"))
+        self._y = np.load(join(path, "y.npy"))
 
-            self._x.append(input)
-            self._y.append(tif.imread(join(path, "gt", f)))
+        if len(ch_in) == 1:
+            self._x = self._x[..., ch_in[0] : ch_in[0] + 1]
 
-        self._x = np.array(self._x)
-        self._y = np.array(self._y)
         print("Data shape:", self._x.shape)
         self._im_size = im_size
         self._random_jitter = random_jitter
@@ -74,7 +68,6 @@ class NpyDataloader:
             elif self._crop_type == "center":
                 x = center_crop(x, self._im_size)
                 y = center_crop(y, self._im_size)
-
             else:
                 assert False
 

@@ -6,6 +6,7 @@ import tensorflow as tf
 import tifffile as tif
 from tqdm import tqdm
 from virvs.architectures.pix2pix import Generator
+from virvs.data.npy_dataloader import NpyDataloader
 
 BASE_PATH = ""
 DATASET = ""
@@ -15,36 +16,39 @@ WEIGHTS_2CH = ""
 
 tf.random.set_seed(42)
 
-x = []
-cellpose_masks = []
-filenames = [f for f in listdir(join(DATASET, "x")) if isfile(join(DATASET, "x", f))]
-for f in filenames:
-    x.append(tif.imread(join(DATASET, "x", f)))
-    cellpose_masks.append(np.load(join(DATASET, "masks", f.replace(".tif", ".npy"))))
-x = np.array(x)
-cellpose_masks = np.array(cellpose_masks)
-
-np.save("cellpose_masks.npy", cellpose_masks)
+dataloader = NpyDataloader(
+    path=DATASET,
+    im_size=2048,
+    random_jitter=False,
+    ch_in=[0, 1],
+)
 
 generator = Generator(2048, [0, 1], 1)
 generator.load_weights(f"{BASE_PATH}{WEIGHTS_2CH}")
 
 pred = []
-for batch_x in tqdm(x):
-    output = np.squeeze(generator(np.expand_dims(batch_x, 0), training=True), 0)
+for sample in tqdm(dataloader):
+    x, y = sample
+    output = np.squeeze(generator(np.expand_dims(x, 0), training=True), 0)
     pred.append(output)
 
 pred = np.array(pred)
 np.save(f"preds_2ch.npy", pred)
 
-x = x[:, :, :, 0:1]
+dataloader = NpyDataloader(
+    path=DATASET,
+    im_size=2048,
+    random_jitter=False,
+    ch_in=[0],
+)
 
 generator = Generator(2048, [0], 1)
 generator.load_weights(f"{BASE_PATH}{WEIGHTS_1CH}")
 
 pred = []
-for batch_x in tqdm(x):
-    output = np.squeeze(generator(np.expand_dims(batch_x, 0), training=True), 0)
+for sample in tqdm(dataloader):
+    x, y = sample
+    output = np.squeeze(generator(np.expand_dims(x, 0), training=True), 0)
     pred.append(output)
 
 pred = np.array(pred)

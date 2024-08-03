@@ -89,7 +89,7 @@ def main():
     val_dataset = val_dataset.batch(batch_size)
 
     generator = Generator(
-        256, ch_in=channels_in, ch_out=channels_out, apply_batchnorm=False
+        256, ch_in=channels_in, ch_out=channels_out, apply_batchnorm=True
     )
     generator.summary()
 
