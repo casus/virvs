@@ -6,6 +6,7 @@ import neptune as neptune
 import numpy as np
 import tensorflow as tf
 from skimage.util import montage
+
 from virvs.architectures.pix2pix import Discriminator, Generator
 from virvs.configs.utils import (
     create_data_config,
@@ -116,9 +117,12 @@ def main():
         ch_in=channels_in,
         ch_out=channels_out,
     )
+
+    val_size = 2048
+
     val_dataset = prepare_dataset(
         path=data_config.val_data_path,
-        im_size=256,
+        im_size=val_size,
         ch_in=channels_in,
         ch_out=channels_out,
     )
@@ -126,13 +130,20 @@ def main():
     batch_size = data_config.batch_size
 
     dataset = dataset.shuffle(5000)
-    val_dataset = val_dataset.shuffle(5000)
+    # val_dataset = val_dataset.shuffle(5000)
 
     dataset = dataset.batch(batch_size)
-    val_dataset = val_dataset.batch(batch_size)
+    val_dataset = val_dataset.batch(1)
 
-    generator = Generator(256, ch_in=channels_in, ch_out=channels_out)
-    discriminator = Discriminator(256, ch_in=channels_in, ch_out=channels_out)
+    generator = Generator(
+        data_config.im_size,
+        ch_in=channels_in,
+        ch_out=channels_out,
+        apply_batchnorm=True,
+    )
+    discriminator = Discriminator(
+        data_config.im_size, ch_in=channels_in, ch_out=channels_out
+    )
     generator.summary()
 
     generator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
@@ -193,15 +204,27 @@ def main():
                     run[f"train_loss_l1"].log((cumulative_loss[2]) / log_freq)
                     run[f"train_loss_disc_total"].log((cumulative_loss[3]) / log_freq)
                     cumulative_loss = np.zeros(4)
+
+                    for k, v in metrics.items():
+                        train_metrics[k] /= log_freq
                     log_metrics(run, train_metrics, prefix="train")
                     train_metrics = defaultdict(float)
 
             if step % val_freq == 0:
                 val_metrics = defaultdict(float)
 
+                weights = generator.get_weights()
+                generator_val = Generator(
+                    2048,
+                    ch_in=channels_in,
+                    ch_out=channels_out,
+                    apply_batchnorm=True,
+                )
+                generator_val.set_weights(weights)
+
                 for n, batch in enumerate(val_dataset):
                     batch_x, batch_y = batch
-                    output = generator(batch_x, training=True)
+                    output = generator_val(batch_x, training=True)
 
                     metrics = calculate_metrics(output, batch_y.numpy())
                     for k, v in metrics.items():
@@ -211,36 +234,36 @@ def main():
                     val_metrics[k] = val_metrics[k] / (n + 1)
 
                 log_metrics(run, val_metrics, prefix="val")
-                if len(channels_in) == 2:
-                    montage_content = np.concatenate(
-                        (
-                            output,
-                            batch_y,
-                            batch_x[..., 0:1],
-                            batch_x[..., 1:2],
-                        ),
-                        axis=2,
-                    )
-                else:
-                    montage_content = np.concatenate(
-                        (
-                            output,
-                            batch_y,
-                            batch_x[..., 0:1],
-                        ),
-                        axis=2,
-                    )
+                # if len(channels_in) == 2:
+                #     montage_content = np.concatenate(
+                #         (
+                #             output,
+                #             batch_y,
+                #             batch_x[..., 0:1],
+                #             batch_x[..., 1:2],
+                #         ),
+                #         axis=2,
+                #     )
+                # else:
+                #     montage_content = np.concatenate(
+                #         (
+                #             output,
+                #             batch_y,
+                #             batch_x[..., 0:1],
+                #         ),
+                #         axis=2,
+                #     )
 
-                output_montage = montage(np.squeeze(montage_content))
-                output_montage = np.uint8(output_montage * 127.5 + 127.5)
-                save_output_montage(
-                    run=run,
-                    output_montage=output_montage,
-                    epoch=step,
-                    output_path=output_path,
-                    run_id=run_id,
-                    prefix="val",
-                )
+                # output_montage = montage(np.squeeze(montage_content))
+                # output_montage = np.uint8(output_montage * 127.5 + 127.5)
+                # save_output_montage(
+                #     run=run,
+                #     output_montage=output_montage,
+                #     epoch=step,
+                #     output_path=output_path,
+                #     run_id=run_id,
+                #     prefix="val",
+                # )
 
             if step == max_steps:
                 if run is not None:

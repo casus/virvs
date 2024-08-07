@@ -19,7 +19,7 @@ def downsample(filters, size, apply_batchnorm=True):
     if apply_batchnorm:
         result.add(tf.keras.layers.BatchNormalization())
 
-    result.add(tf.keras.layers.LeakyReLU())
+    result.add(tf.keras.layers.LeakyReLU(alpha=0.2))
 
     return result
 
@@ -49,24 +49,30 @@ def upsample(filters, size, apply_dropout=False):
     return result
 
 
-def Generator(im_shape, ch_in, ch_out):
+def Generator(im_shape, ch_in, ch_out, apply_batchnorm=True, apply_dropout=True):
     inputs = tf.keras.layers.Input(shape=[im_shape, im_shape, len(ch_in)])
 
     down_stack = [
         downsample(64, 4, apply_batchnorm=False),  # (batch_size, 128, 128, 64)
-        downsample(128, 4),  # (batch_size, 64, 64, 128)
-        downsample(256, 4),  # (batch_size, 32, 32, 256)
-        downsample(512, 4),  # (batch_size, 16, 16, 512)
-        downsample(512, 4),  # (batch_size, 8, 8, 512)
-        downsample(512, 4),  # (batch_size, 4, 4, 512)
-        downsample(512, 4),  # (batch_size, 2, 2, 512)
-        downsample(512, 4),  # (batch_size, 1, 1, 512)
+        downsample(
+            128, 4, apply_batchnorm=apply_batchnorm
+        ),  # (batch_size, 64, 64, 128)
+        downsample(
+            256, 4, apply_batchnorm=apply_batchnorm
+        ),  # (batch_size, 32, 32, 256)
+        downsample(
+            512, 4, apply_batchnorm=apply_batchnorm
+        ),  # (batch_size, 16, 16, 512)
+        downsample(512, 4, apply_batchnorm=apply_batchnorm),  # (batch_size, 8, 8, 512)
+        downsample(512, 4, apply_batchnorm=apply_batchnorm),  # (batch_size, 4, 4, 512)
+        downsample(512, 4, apply_batchnorm=apply_batchnorm),  # (batch_size, 2, 2, 512)
+        downsample(512, 4, apply_batchnorm=apply_batchnorm),  # (batch_size, 1, 1, 512)
     ]
 
     up_stack = [
-        upsample(512, 4, apply_dropout=True),  # (batch_size, 2, 2, 1024)
-        upsample(512, 4, apply_dropout=True),  # (batch_size, 4, 4, 1024)
-        upsample(512, 4, apply_dropout=True),  # (batch_size, 8, 8, 1024)
+        upsample(512, 4, apply_dropout=apply_dropout),  # (batch_size, 2, 2, 1024)
+        upsample(512, 4, apply_dropout=apply_dropout),  # (batch_size, 4, 4, 1024)
+        upsample(512, 4, apply_dropout=apply_dropout),  # (batch_size, 8, 8, 1024)
         upsample(512, 4),  # (batch_size, 16, 16, 1024)
         upsample(256, 4),  # (batch_size, 32, 32, 512)
         upsample(128, 4),  # (batch_size, 64, 64, 256)
@@ -125,7 +131,7 @@ def Discriminator(im_shape, ch_in, ch_out):
 
     batchnorm1 = tf.keras.layers.BatchNormalization()(conv)
 
-    leaky_relu = tf.keras.layers.LeakyReLU()(batchnorm1)
+    leaky_relu = tf.keras.layers.LeakyReLU(alpha=0.2)(batchnorm1)
 
     zero_pad2 = tf.keras.layers.ZeroPadding2D()(leaky_relu)  # (batch_size, 33, 33, 512)
 
