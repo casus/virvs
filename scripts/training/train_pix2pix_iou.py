@@ -17,6 +17,8 @@ from virvs.configs.utils import (
 )
 from virvs.utils.evaluation_utils import (
     calculate_acc,
+    calculate_acc_only_cells,
+    calculate_f1,
     calculate_iou,
     calculate_prec,
     calculate_rec,
@@ -144,9 +146,7 @@ def main():
 
     dataset = dataset.shuffle(5000)
     # val_dataset = val_dataset.shuffle(5000)
-    masks = np.load(
-        "/bigdata/casus/MLID/maria/VIRVS_data/masks/masks_cell_hadv_val.npy"
-    )
+    masks = np.load("/bigdata/casus/MLID/maria/VIRVS_data/masks/masks_nuc_hadv_val.npy")
 
     dataset = dataset.batch(batch_size)
     val_dataset = val_dataset.batch(1)
@@ -237,7 +237,7 @@ def main():
                 )
                 generator_val.set_weights(weights)
 
-                ious, accs, precs, recs = [], [], [], []
+                ious, accs, precs, recs, f1s, acc_only_cells = [], [], [], [], [], []
                 for n, batch in enumerate(val_dataset):
                     batch_x, batch_y = batch
                     output = generator_val(batch_x, training=True)
@@ -255,12 +255,18 @@ def main():
                             continue
                         iou = calculate_iou(pred_masks, gt_masks)
                         ious.append(iou)
+                        f1 = calculate_f1(gt_masks, pred_masks, np.sum(mask == 0))
+                        f1s.append(f1)
                         acc = calculate_acc(pred_masks, gt_masks)
                         accs.append(acc)
-                        prec = calculate_rec(pred_masks, gt_masks, np.sum(mask == 0))
+                        prec = calculate_prec(gt_masks, pred_masks, np.sum(mask == 0))
                         precs.append(prec)
-                        rec = calculate_prec(pred_masks, gt_masks, np.sum(mask == 0))
+                        rec = calculate_rec(gt_masks, pred_masks, np.sum(mask == 0))
                         recs.append(rec)
+                        acc_only = calculate_acc_only_cells(
+                            gt_masks, pred_masks, np.sum(mask == 0)
+                        )
+                        acc_only_cells.append(acc_only)
 
                     metrics = calculate_metrics(output, batch_y.numpy())
                     for k, v in metrics.items():
@@ -273,6 +279,8 @@ def main():
                 val_metrics["acc"] = np.mean(np.array(accs))
                 val_metrics["prec"] = np.mean(np.array(precs))
                 val_metrics["rec"] = np.mean(np.array(recs))
+                val_metrics["acc_only"] = np.mean(np.array(acc_only_cells))
+                val_metrics["f1"] = np.mean(np.array(f1s))
 
                 log_metrics(run, val_metrics, prefix="val")
                 # if len(channels_in) == 2:
