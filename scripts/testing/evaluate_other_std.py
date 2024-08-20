@@ -78,7 +78,7 @@ DATASETS = {
     "hsv": "/bigdata/casus/MLID/maria/VIRVS_data/HSV/processed/test",
     "rv": "/bigdata/casus/MLID/maria/VIRVS_data/RV/processed/test",
 }
-
+BASE_PATH = "/home/wyrzyk93/VIRVS/outputs/weights/"
 WEIGHTS = {
     "pix2pix": {
         "hadv_2ch": "model_100000_316674a2-4299-4a06-b601-5e20f7dd02a6.h5",

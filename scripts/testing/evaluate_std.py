@@ -76,10 +76,6 @@ def eval(size, ch_in, dropout, model, virus, threshold):
             test_metrics["bg_psnr"].append(bg_psnr)
             test_metrics["bg_mse"].append(bg_mse)
 
-    for k, v in test_metrics.items():
-        test_metrics[k] = np.mean(np.array(v))
-        test_metrics[k + "_std"] = np.std(np.array(v))
-
     return test_metrics
 
 
@@ -118,7 +114,4 @@ for virus in DATASETS.keys():
         test_metrics = eval(size, ch_in, dropout, model, virus, threshold)
 
         for key, value in test_metrics.items():
-            if "std" not in key:
-                print(
-                    f"{key}: {round(value, 3)}, std: {round(test_metrics[key+'_std'], 3)}"
-                )
+            print(f"{key}: {round(np.mean(value), 3)}, std {round(np.std(value), 3)}")
