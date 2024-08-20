@@ -9,6 +9,7 @@ After downloading the data, run the data processing scripts that are located in 
 - for HAdV data: `preprocess_hadv.py`
 - for VACV data: `stitch_vacv.py` + `preprocess_vacv.py`
 - for the rest of the viruses: `preprocess_other.py`
+- to prepare Cellpose predictions: `prepare_cellpose_preds.py` (for cells) and `prepare_cellpose_preds_nuc.py` (for nuclei)
 
 ## How to prepare environment?
 
@@ -30,10 +31,13 @@ pip install -e .
 
 ## How to evaluate the models?
 
-1. Modify the `scripts/testing/save_preds.py` and `scripts/testing/evalute.py` with the correct paths.
-2. Run the code from the root directory: `python scripts/testing/save_preds.py`.
-3. Run the code from the root directory: `python scripts/testing/evaluate.py`.
-4. Optionally, prepare the plots with `python scripts/testing/prepare_plots.py`.
+There are multiple scripts available for evaluation:
+- testing/evalute.py - to calculate basic metrics such as MSE for all the models and datasets
+- testing/evalute_hadv.py - to calculate IoU, F1 etc for HAdV datasets
+- testing/evalute_other.py - to calculate IoU, F1 etc for the rest of datasets
+
+1. Modify the `scripts/testing/evalute.py` with the correct paths.
+2. Run the code from the root directory: `scripts/testing/evalute.py`.
 
 ## License
 This repository is released under the MIT License (refer to the LICENSE file for details).
