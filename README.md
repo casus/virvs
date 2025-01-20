@@ -2,6 +2,20 @@
 
 This code implements the code for A Benchmark for Virus Infection Reporter Virtual Staining in Fluorescence and Brightfield Microscopy paper.
 
+## How to cite us
+Wyrzykowska, Maria, Gabriel della Maggiora, Nikita Deshpande, Ashkan Mokarian, and Artur Yakimovich. "A Benchmark for Virus Infection Reporter Virtual Staining in Fluorescence and Brightfield Microscopy." bioRxiv (2024): 2024-08.
+
+```
+@article{wyrzykowska2024benchmark,
+  title={A Benchmark for Virus Infection Reporter Virtual Staining in Fluorescence and Brightfield Microscopy},
+  author={Wyrzykowska, Maria and della Maggiora, Gabriel and Deshpande, Nikita and Mokarian, Ashkan and Yakimovich, Artur},
+  journal={bioRxiv},
+  pages={2024--08},
+  year={2024},
+  publisher={Cold Spring Harbor Laboratory}
+}
+```
+
 ## Where to get the data?
 
 The datasets that we are using are available online. They can be downloaded following the instructions in the papers publishing them, which are referenced in our paper.
