@@ -1,3 +1,24 @@
+"""
+This script evaluates segmentation models (UNet and Pix2Pix) on HAdV infected cell microscopy images,
+using various accuracy and cell-level metrics. It focuses on predicting and validating 
+segmentation masks on the test split of the dataset.
+
+Key Features:
+- Evaluates two segmentation architectures: UNet and Pix2Pix
+- Handles single-channel and dual-channel input configurations
+- Calculates detailed performance metrics: IoU, F1, accuracy, precision, recall, and cell-level variants
+- Averages Pix2Pix results across multiple seeds to account for dropout variability
+- Loads predicted cell masks and compares them against model outputs
+
+Input:
+- Processed test images (TIFF format loaded via NpyDataloader)
+- Precomputed ground truth cell masks (NumPy arrays)
+- Trained model weights for each model/input configuration
+
+Output:
+- Printed evaluation metrics for each model and input variant
+"""
+
 from collections import defaultdict
 
 import numpy as np
@@ -23,6 +44,17 @@ from virvs.utils.evaluation_utils import (
 
 
 def eval(dataloader, generator, masks):
+    """
+    Evaluate a generator model on a given dataset using provided masks.
+
+    Args:
+        dataloader (NpyDataloader): Loader for test images and labels.
+        generator (tf.keras.Model): Generator model for predictions.
+        masks (np.ndarray): Mask array identifying cell regions.
+
+    Returns:
+        dict: Mean of various performance metrics across the dataset.
+    """
     test_metrics = defaultdict(list)
 
     for i in tqdm(range(len(dataloader))):
@@ -33,17 +65,23 @@ def eval(dataloader, generator, masks):
         label_flat = y.flatten()
         mask_flat = masks_pred.flatten()
 
+        # Identify relevant mask areas based on label validity
         weights = (label_flat > -0.9).astype(np.float32)
         mean_per_mask = get_mean_per_mask(mask_flat, weights)
         masks_to_show = get_masks_to_show(mean_per_mask, 0.5)
         new_mask = np.isin(masks_pred, masks_to_show)
 
+        # Apply same logic to predicted mask
         pred_weights = (np.squeeze(pred).flatten() > -0.9).astype(np.float32)
         pred_mean_per_mask = get_mean_per_mask(mask_flat, pred_weights)
         pred_masks_to_show = get_masks_to_show(pred_mean_per_mask, 0.5)
         pred_new_mask = np.isin(masks_pred, pred_masks_to_show)
+
+        # Skip evaluation if ground truth has no valid regions
         if np.all(new_mask == 0):
             continue
+
+        # Compute and store evaluation metrics
         test_metrics["iou"].append(calculate_iou(pred_new_mask, new_mask))
         test_metrics["f1"].append(
             calculate_f1(new_mask, pred_new_mask, np.sum(masks_pred == 0))
@@ -66,10 +104,10 @@ def eval(dataloader, generator, masks):
         )
 
     mean_metrics = {key: np.mean(values) for key, values in test_metrics.items()}
-
     return mean_metrics
 
 
+# Path to trained weights
 BASE_PATH = "/home/wyrzyk93/VIRVS/outputs/weights/"
 WEIGHTS = {
     "pix2pix": {
@@ -82,15 +120,14 @@ WEIGHTS = {
     },
 }
 
+# Load test-time masks
 masks = np.load(f"/bigdata/casus/MLID/maria/VIRVS_data/masks/masks_cell_hadv_test.npy")
 
+# Iterate over virus variants (1-channel vs 2-channel input)
 for virus in ["hadv_2ch", "hadv_1ch"]:
 
     size = 2048
-    if "2ch" in virus:
-        ch_in = [0, 1]
-    else:
-        ch_in = [0]
+    ch_in = [0, 1] if "2ch" in virus else [0]
 
     dataloader = NpyDataloader(
         path="/bigdata/casus/MLID/maria/VIRVS_data/HADV/processed/test",
@@ -99,24 +136,28 @@ for virus in ["hadv_2ch", "hadv_1ch"]:
         ch_in=ch_in,
         crop_type="center",
     )
+
     for model in ["unet", "pix2pix"]:
-        if model == "unet":
-            dropout = False
-        else:
-            dropout = True
+        dropout = model != "unet"
         print(model, ", ", virus)
+
         if model == "unet":
+            # Deterministic evaluation for UNet
             tf.keras.utils.set_random_seed(42)
             generator = Generator(size, ch_in=ch_in, ch_out=1, apply_dropout=dropout)
             generator.load_weights(f"{BASE_PATH}/{WEIGHTS[model][virus]}")
             test_metrics = eval(dataloader, generator, masks)
             for key, value in test_metrics.items():
                 print(f"{key}: {round(value, 3)}")
+
         else:
+            # Repeat evaluation with different seeds for dropout-based Pix2Pix
             seeds = [42, 43, 44]
             all_seeds_metrics = defaultdict(list)
+
             generator = Generator(size, ch_in=ch_in, ch_out=1, apply_dropout=dropout)
             generator.load_weights(f"{BASE_PATH}/{WEIGHTS[model][virus]}")
+
             for seed in seeds:
                 tf.keras.utils.set_random_seed(seed)
                 test_metrics = eval(dataloader, generator, masks)

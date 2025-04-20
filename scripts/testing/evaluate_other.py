@@ -1,3 +1,25 @@
+"""
+This script evaluates segmentation models (UNet and Pix2Pix) across multiple virus datasets 
+using nuclear masks. It processes test images for six virus variants and reports various 
+segmentation metrics.
+
+Key Features:
+- Evaluates two segmentation architectures: UNet and Pix2Pix
+- Supports multiple virus datasets: HAdV, VACV, IAV, HSV, RV
+- Handles single- and dual-channel image inputs
+- Applies virus-specific image sizes and thresholding
+- Uses nucleus-based masks for evaluation with cell-level precision/recall
+- Repeats Pix2Pix evaluations across multiple seeds to average out stochastic effects
+
+Input:
+- Processed test images in TIFF format for each virus variant
+- Precomputed nucleus masks in NumPy format
+- Trained model weights for each model/virus pair
+
+Output:
+- Printed evaluation metrics per model and virus, including mean/std for Pix2Pix
+"""
+
 from collections import defaultdict
 from math import floor, log10
 
@@ -24,28 +46,50 @@ from virvs.utils.evaluation_utils import (
 
 
 def eval(dataloader, generator, masks, threshold):
+    """
+    Evaluates a segmentation model on a dataset split using provided cell/nuclear masks.
+
+    Args:
+        dataloader (NpyDataloader): Dataloader for the test split.
+        generator (tf.keras.Model): Segmentation model (UNet or Pix2Pix).
+        masks (np.ndarray): Ground truth nuclear masks.
+        threshold (float): Threshold for binarizing predictions.
+
+    Returns:
+        dict: Dictionary of mean evaluation metrics (e.g., IoU, F1, accuracy, precision).
+    """
     test_metrics = defaultdict(list)
 
     for i in tqdm(range(len(dataloader))):
+        # Load input image and label from dataloader
         x, y = dataloader[i]
+
+        # Crop cell/nuclear mask to match image shape
         masks_pred = center_crop(masks[i], x.shape[0])
+
+        # Run model prediction
         pred = np.squeeze(generator(np.expand_dims(x, 0), training=True), 0)
 
+        # Flatten label and mask for metric calculations
         label_flat = y.flatten()
         mask_flat = masks_pred.flatten()
 
+        # Identify ground truth foreground mask using thresholding
         weights = (label_flat > threshold).astype(np.float32)
         mean_per_mask = get_mean_per_mask(mask_flat, weights)
         masks_to_show = get_masks_to_show(mean_per_mask, 0.5)
         new_mask = np.isin(masks_pred, masks_to_show)
 
+        # Identify predicted foreground mask using thresholding
         pred_weights = (np.squeeze(pred).flatten() > threshold).astype(np.float32)
         pred_mean_per_mask = get_mean_per_mask(mask_flat, pred_weights)
         pred_masks_to_show = get_masks_to_show(pred_mean_per_mask, 0.5)
         pred_new_mask = np.isin(masks_pred, pred_masks_to_show)
 
         if np.all(new_mask == 0):
-            continue
+            continue  # Skip if no ground truth cells found
+
+        # Compute evaluation metrics and append to running lists
         test_metrics["iou"].append(calculate_iou(pred_new_mask, new_mask))
         test_metrics["f1"].append(
             calculate_f1(new_mask, pred_new_mask, np.sum(masks_pred == 0))
@@ -67,10 +111,12 @@ def eval(dataloader, generator, masks, threshold):
             calculate_cell_rec(masks_pred, new_mask, pred_new_mask)
         )
 
+    # Return mean metrics across all samples
     mean_metrics = {key: np.mean(values) for key, values in test_metrics.items()}
     return mean_metrics
 
 
+# Dataset paths for each virus
 DATASETS = {
     "hadv_2ch": "/bigdata/casus/MLID/maria/VIRVS_data/HADV/processed/test",
     "hadv_1ch": "/bigdata/casus/MLID/maria/VIRVS_data/HADV/processed/test",
@@ -80,6 +126,7 @@ DATASETS = {
     "rv": "/bigdata/casus/MLID/maria/VIRVS_data/RV/processed/test",
 }
 
+# Path to model weights
 BASE_PATH = "/home/wyrzyk93/VIRVS/outputs/weights/"
 WEIGHTS = {
     "pix2pix": {
@@ -99,27 +146,23 @@ WEIGHTS = {
 }
 
 
+# Run evaluation for each virus and model
 for virus in WEIGHTS["pix2pix"].keys():
+    # Set image size depending on virus
+    size = 5888 if virus == "vacv" else 2048
 
-    if "vacv" == virus:
-        size = 5888
-    else:
-        size = 2048
+    # Set prediction threshold based on virus type
+    threshold = -0.9 if "hadv" in virus else -0.8
 
-    if "hadv" in virus:
-        threshold = -0.9
-    else:
-        threshold = -0.8
+    # Determine input channels (single or dual)
+    ch_in = [0, 1] if "2ch" in virus else [0]
 
-    if "2ch" in virus:
-        ch_in = [0, 1]
-    else:
-        ch_in = [0]
-
+    # Load nuclear masks
     masks = np.load(
         f"/bigdata/casus/MLID/maria/VIRVS_data/masks/masks_nuc_{virus[:4]}_test.npy"
     )
 
+    # Initialize dataloader
     dataloader = NpyDataloader(
         path=DATASETS[virus],
         im_size=size,
@@ -127,13 +170,14 @@ for virus in WEIGHTS["pix2pix"].keys():
         ch_in=ch_in,
         crop_type="center",
     )
+
+    # Evaluate both UNet and Pix2Pix
     for model in ["unet", "pix2pix"]:
-        if model == "unet":
-            dropout = False
-        else:
-            dropout = True
+        dropout = model == "pix2pix"
         print(model, ", ", virus)
+
         if model == "unet":
+            # Evaluate UNet with fixed seed
             tf.keras.utils.set_random_seed(42)
             generator = Generator(size, ch_in=ch_in, ch_out=1, apply_dropout=dropout)
             generator.load_weights(f"{BASE_PATH}/{WEIGHTS[model][virus]}")
@@ -141,11 +185,14 @@ for virus in WEIGHTS["pix2pix"].keys():
 
             for key, value in test_metrics.items():
                 print(f"{key}: {round(value, 3)}")
+
         else:
+            # Evaluate Pix2Pix across multiple seeds
             seeds = [42, 43, 44]
             all_seeds_metrics = defaultdict(list)
             generator = Generator(size, ch_in=ch_in, ch_out=1, apply_dropout=dropout)
             generator.load_weights(f"{BASE_PATH}/{WEIGHTS[model][virus]}")
+
             for seed in seeds:
                 tf.keras.utils.set_random_seed(seed)
                 test_metrics = eval(dataloader, generator, masks, threshold)

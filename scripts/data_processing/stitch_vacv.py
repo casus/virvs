@@ -1,15 +1,36 @@
-"""Script to collect and stitch time-lapse videos for the 2channel dataset (aka VACVLarge).
+"""
+This script processes and stitches multi-tile, multi-channel time-lapse microscopy data
+from the VACVLarge (2channel) dataset. It organizes scattered files into a structured
+output with consistent naming, performs image registration and stitching, and saves
+the results for downstream analysis.
 
-Purpose of this script is to store all files scattered in different folders and
-all saved with a convenient name in one folder.
+Key Features:
+- Processes 3 timepoints (100, 108, 115) from time-lapse experiments
+- Handles 3 fluorescence channels (w1, w2, w3)
+- Computes stitching parameters from w3 channel and applies to all channels
+- Corrects for tile overlap (10%) during stitching
+- Filters out corrupt samples automatically
+- Generates composite stitched images for each timepoint and channel
 
-For each frame, the stitching parameters for w3 channel is computed. Then, the
-same parameters are used for the other two channels as well. This will result in
-3 tiff files for each frame each channel. The same is applied for the other
-frames as well. Then saved and compressed into a single file with proper names
-to be downloaded from the server. Then on a local machine with Fiji, one can
-merge any of the channles and also any of the frames needed to get the time-lapse
-images.
+Workflow:
+1. For each sample and timepoint:
+   a. Identifies all tile images (9 tiles per channel)
+   b. Computes registration parameters using w3 channel
+   c. Applies same transformation to all channels (w1, w2, w3)
+   d. Stitches tiles into composite images
+   e. Saves results with standardized naming convention
+
+Output Structure:
+- Creates subdirectory for each sample
+- Saves stitched images as:
+  {sample_identifier}/{channel}_t{timepoint}.tif
+
+Usage:
+- Set IMAGES_DIR and OUTPUT_DIR paths
+- Run script to process all valid samples
+- Use Fiji to merge timepoints/channels as needed
+
+Note: Automatically excludes corrupt samples listed in TO_REMOVE
 """
 
 import os
@@ -21,10 +42,12 @@ import tifffile
 from multiview_stitcher import msi_utils, param_utils, registration, spatial_image_utils
 from tqdm import tqdm
 
-TIMEPOINTS_TO_USE = [100, 108, 115]
-IMAGES_DIR = Path("")
-OUTPUT_DIR = Path("")
+# Configuration
+TIMEPOINTS_TO_USE = [100, 108, 115]  # Timepoints to process
+IMAGES_DIR = Path("")  # Root directory containing TimePoint_X subdirectories
+OUTPUT_DIR = Path("")  # Output directory for stitched images
 
+# Corrupt samples to exclude 
 TO_REMOVE = [
     "121218-AY-JM-VACV-TC_C02",
     "121218-AY-JM-VACV-TC_C07",
@@ -38,19 +61,26 @@ TO_REMOVE = [
 
 
 def main(time_point, sample_identifier):
+    """
+    Process and stitch images for a specific sample and timepoint.
+    
+    Args:
+        time_point (int): Timepoint to process (e.g., 100)
+        sample_identifier (str): Sample ID (e.g., "121218-AY-JM-VACV-TC_A01")
+    """
     images_dir = IMAGES_DIR / f"TimePoint_{time_point}"
-
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-    # Get the 9 files we need to stitch
+    # Get w3 channel files for registration
     files = get_files(
         dir=images_dir, sample_identifier=sample_identifier, channel_identifier="w3"
     )
 
+    # Create multi-scale images and set initial transformation
     msims = get_msims_from_files(files, channels=[3])
-
     set_initial_transformation_guess(msims)
 
+    # Perform registration using w3 channel
     params = registration.register(
         msims, reg_channel_index=0, transform_key="affine_manual"
     )
@@ -62,10 +92,10 @@ def main(time_point, sample_identifier):
             base_transform_key="affine_manual",
         )
 
-    # Use ch3 parameters for the other channels, stitch them and save them in a
-    # folder for download
+    # Get stitching parameters from registered images
     stitching_params_xy = get_stitching_params_from_msims(msims)
 
+    # Apply stitching to all channels
     channels = ["w1", "w2", "w3"]
     for ch in channels:
         files = get_files(
@@ -81,18 +111,19 @@ def main(time_point, sample_identifier):
 
 
 def get_files(dir, sample_identifier, channel_identifier=None):
-    """Get all files in a directory.
-
-    Args:
-        dir (str): Directory to look for files.
-        sample_identifier (str): Sample identifier to look for.
-        channel_identifier (str): Channel identifier to look for.
-
-    Returns:
-        list: Sorted list of files.
     """
-
+    Get sorted list of tile files for a sample and channel.
+    
+    Args:
+        dir (Path): Directory containing TimePoint_X folders
+        sample_identifier (str): Sample ID prefix
+        channel_identifier (str): Channel identifier (w1/w2/w3)
+    
+    Returns:
+        List[Path]: Sorted list of file paths
+    """
     def sort_by_s(fn):
+        """Sort helper function by tile number (s1-s9)"""
         s_digit = int(fn.split("/")[-1].split("_s")[1][0])
         return s_digit
 
@@ -113,25 +144,41 @@ def get_files(dir, sample_identifier, channel_identifier=None):
 
 
 def get_fp_from_tile_and_channel(file_list, filetile, channel):
+    """
+    Get file path for specific tile and channel.
+    
+    Args:
+        file_list (List[Path]): List of all files
+        filetile (int): Tile number (1-9)
+        channel (int): Channel number (1-3)
+    
+    Returns:
+        Path: Matching file path or None
+    """
     for fp in file_list:
         filename = fp.name
-        # Extract tile number and channel number from the filename
         match = re.search(r".*_s(\d+)_w(\d).*.tif", filename)
         if match:
             tile_number = int(match.group(1))
             channel_number = int(match.group(2))
-
-            # Check if the extracted tile and channel numbers match the provided ones
             if tile_number == filetile and channel_number == channel:
                 return fp
-
-    # If no matching filename found, return None
     return None
 
 
 def get_msims_from_files(files, channels=[1, 2, 3]):
+    """
+    Create multi-scale images from tile files.
+    
+    Args:
+        files (List[Path]): List of input files
+        channels (List[int]): Channels to include
+    
+    Returns:
+        List: Multi-scale image objects
+    """
     msims = []
-    tiles = np.arange(1, 10)
+    tiles = np.arange(1, 10)  # 3x3 grid of tiles
     for tile in tiles:
         im_data = np.array(
             [
@@ -148,44 +195,71 @@ def get_msims_from_files(files, channels=[1, 2, 3]):
 
 
 def set_initial_transformation_guess(msims):
-    overlap = 0.1
+    """
+    Set initial affine transformation accounting for 10% tile overlap.
+    
+    Args:
+        msims: List of multi-scale images
+    """
+    overlap = 0.1  # 10% overlap between tiles
     for tile_index, msim in enumerate(msims):
-        x_index = tile_index % 3
-        y_index = tile_index // 3
+        x_index = tile_index % 3  # Column position (0-2)
+        y_index = tile_index // 3  # Row position (0-2)
 
         tile_extent = (
             spatial_image_utils.get_center_of_sim(msi_utils.get_sim_from_msim(msim)) * 2
         )
         y_extent, x_extent = tile_extent
 
+        # Create affine transform accounting for grid position and overlap
         affine = param_utils.affine_from_translation(
             [y_index * (1 - overlap) * y_extent, x_index * (1 - overlap) * x_extent]
         )
 
         msi_utils.set_affine_transform(
             msim,
-            affine[None],  # one tp
+            affine[None],  # one timepoint
             transform_key="affine_manual",
         )
 
 
 def get_stitching_params_from_msims(msims):
+    """
+    Extract stitching parameters from registered images.
+    
+    Args:
+        msims: List of registered multi-scale images
+    
+    Returns:
+        np.array: Stitching parameters (9x2 array of x,y offsets)
+    """
     params_xy = np.zeros((9, 2), dtype=int)
     for i in range(len(msims)):
         y = msims[i]["scale0/affine_registered"].data[0, 0, 2]
         x = msims[i]["scale0/affine_registered"].data[0, 1, 2]
         params_xy[i, 0] = x.astype(int)
         params_xy[i, 1] = y.astype(int)
-    # Since these params can contain negatives and invalid values, we modify here
+    # Normalize to remove negative values
     params_xy[:, 0] -= params_xy[:, 0].min()
     params_xy[:, 1] -= params_xy[:, 1].min()
     return params_xy
 
 
 def stitch_files_by_params(files, params):
+    """
+    Stitch tiles together using computed parameters.
+    
+    Args:
+        files (List[Path]): List of input files
+        params (np.array): Stitching parameters
+    
+    Returns:
+        np.array: Composite stitched image
+    """
     images = [tifffile.imread(f) for f in files]
-
     size_y, size_x = images[0].shape
+    
+    # Calculate output dimensions
     stitched_size = (
         params[:, 1].max() + size_y,
         params[:, 0].max() + size_x,
@@ -201,21 +275,20 @@ def stitch_files_by_params(files, params):
 
 
 if __name__ == "__main__":
-
+    # Get all unique sample identifiers (first 24 chars of filename)
     samples_list = list(
         set([filename[:24] for filename in os.listdir(IMAGES_DIR / f"TimePoint_1")])
     )
-    print("Samples list", samples_list)
+    print("Samples to process:", samples_list)
+    
+    # Process each sample through all timepoints
     for sample_identifier in tqdm(samples_list):
         if any([x in sample_identifier for x in TO_REMOVE]):
-            print("Ignoring sample ", sample_identifier)
+            print("Skipping corrupt sample:", sample_identifier)
             continue
-        else:
-            store_path = OUTPUT_DIR / sample_identifier
-            timepoints = TIMEPOINTS_TO_USE
-
-            print(f"Stitching sample: {sample_identifier}")
-            for i in timepoints:
-                print(f"Processing timepoint {i}")
-                main(i, sample_identifier)
-            print(f"Done! Results saved in: {OUTPUT_DIR}/{sample_identifier}")
+            
+        print(f"\nProcessing sample: {sample_identifier}")
+        for timepoint in TIMEPOINTS_TO_USE:
+            print(f"  Stitching timepoint {timepoint}")
+            main(timepoint, sample_identifier)
+        print(f"Completed! Results in: {OUTPUT_DIR}/{sample_identifier}")
