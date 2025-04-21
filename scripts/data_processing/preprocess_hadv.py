@@ -105,9 +105,9 @@ def get_file_paths(virus: str) -> list[str]:
         for file in files:
             # should only use w1
             if "w1" in file:
-                file_paths.append(str(Path(root) / file))
+                file_paths.append(Path(root) / file)
     
-    return sorted(Path(file_paths))
+    return sorted(file_paths)
 
 # Prepare for data splitting - remove duplicates and shuffle
 paths = get_file_paths("HADV")
