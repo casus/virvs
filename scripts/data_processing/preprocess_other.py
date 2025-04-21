@@ -127,7 +127,7 @@ def get_file_paths(virus: str) -> list[str]:
             if "w1" in file:
                 file_paths.append(str(Path(root) / file))
     
-    return sorted(file_paths)
+    return sorted(Path(file_paths))
 
 # Prepare for data splitting - remove duplicates and shuffle
 paths = get_file_paths(VIRUS)
