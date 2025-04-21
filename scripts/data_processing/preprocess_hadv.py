@@ -25,14 +25,16 @@ import numpy as np
 import tifffile as tif
 from tqdm import tqdm
 
+RANDOM_SEED = os.environ['RANDOM_SEED']
+
 # Configuration parameters
-INPUT_PATH = ""  # Root path to input data
-OUTPUT_PATH = ""  # Root path for output data
+INPUT_PATH = "/bigdata/casus/MLID/maria/VIRVS_data/HADV/raw"  # Root path to input data
+OUTPUT_PATH = f"/bigdata/casus/MLID/maria/VIRVS_data/HADV/processed_{RANDOM_SEED}"  # Root path for output data
 VAL_FRACTION = 0.2  # Fraction of data for validation set
 TEST_FRACTION = 0.1  # Fraction of data for test set
 
 # Set random seed for reproducible data splitting
-np.random.seed(42)
+np.random.seed(RANDOM_SEED)
 
 def sample_norm(x, min, max):
     """Normalize and scale image data to [-1, 1] range based on predefined min/max values.

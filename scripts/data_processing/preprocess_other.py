@@ -22,14 +22,16 @@ import numpy as np
 import tifffile as tif
 from tqdm import tqdm
 
+RANDOM_SEED = os.environ['RANDOM_SEED']
+VIRUS = os.environ['VIRUS']
 # Configuration parameters
 VAL_FRACTION = 0.2  # Fraction of data for validation set
 TEST_FRACTION = 0.1  # Fraction of data for test set
-np.random.seed(42)   # Seed for reproducible random splitting
+np.random.seed(RANDOM_SEED)   # Seed for reproducible random splitting
 
 # Path configuration
-BASE_PATH = ""  # Root path to input data
-OUTPUT_PATH = ""  # Root path for output data
+BASE_PATH = f"/bigdata/casus/MLID/maria/VIRVS_data/{VIRUS}/raw"  # Root path to input data
+OUTPUT_PATH = f"/bigdata/casus/MLID/maria/VIRVS_data/{VIRUS}/processed_{RANDOM_SEED}"  # Root path for output data
 
 # Plate directory suffixes to process
 SUFFIXES = [

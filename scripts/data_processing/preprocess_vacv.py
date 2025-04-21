@@ -23,12 +23,15 @@ import tifffile as tif
 from tqdm import tqdm
 
 # Configuration parameters
+RANDOM_SEED = os.environ['RANDOM_SEED']
+
+
 TIMEPOINTS = [100, 108, 115]  # Specific timepoints to process
-INPUT_PATH = ""  # Root path to input data
-OUTPUT_PATH = ""  # Root path for output data
+INPUT_PATH = "/bigdata/casus/MLID/maria/VIRVS_data/VACV/raw" # Root path to input data
+OUTPUT_PATH = f"/bigdata/casus/MLID/maria/VIRVS_data/VACV/processed_{RANDOM_SEED}"  # Root path for output data
 VAL_FRACTION = 0.2  # Fraction of data for validation set
 TEST_FRACTION = 0.1  # Fraction of data for test set
-np.random.seed(42)  # Seed for reproducible random splitting
+np.random.seed(RANDOM_SEED)  # Seed for reproducible random splitting
 
 def center_crop(x, crop_size_y, crop_size_x):
     """Center crop an image to specified dimensions.
