@@ -66,6 +66,7 @@ def read_tiff(path):
 
 # Get all w1 channel paths for TimePoint 1 (used as reference)
 paths_w1 = list(Path(INPUT_PATH).glob("**/TimePoint_" + str(1) + "/*_w1.tif"))
+
 n_sequences = len(paths_w1)
 sequence_length = 1  # Currently processing single timepoint
 

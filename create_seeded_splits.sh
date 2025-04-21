@@ -10,7 +10,7 @@ declare -A virus_scripts=(
 )
 
 # Random seeds to iterate over
-seeds=(42 43 44)
+seeds=(43 44 45)
 
 # Loop through each virus and run preprocessing + to_npy.py
 for virus in "${!virus_scripts[@]}"; do

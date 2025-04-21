@@ -31,8 +31,8 @@ TEST_FRACTION = 0.1  # Fraction of data for test set
 np.random.seed(RANDOM_SEED)   # Seed for reproducible random splitting
 
 # Path configuration
-BASE_PATH = f"/bigdata/casus/MLID/maria/VIRVS_data/{VIRUS}/raw"  # Root path to input data
-OUTPUT_PATH = f"/bigdata/casus/MLID/maria/VIRVS_data/{VIRUS}/processed_{RANDOM_SEED}"  # Root path for output data
+BASE_PATH = f"/bigdata/casus/MLID/maria/VIRVS_data/{VIRUS}/raw/"  # Root path to input data
+OUTPUT_PATH = f"/bigdata/casus/MLID/maria/VIRVS_data/{VIRUS}/processed_{RANDOM_SEED}/"  # Root path for output data
 
 # Plate directory suffixes to process
 SUFFIXES = [

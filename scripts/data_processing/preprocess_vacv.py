@@ -27,8 +27,8 @@ RANDOM_SEED = int(os.environ['RANDOM_SEED'])
 
 
 TIMEPOINTS = [100, 108, 115]  # Specific timepoints to process
-INPUT_PATH = "/bigdata/casus/MLID/maria/VIRVS_data/VACV/raw" # Root path to input data
-OUTPUT_PATH = f"/bigdata/casus/MLID/maria/VIRVS_data/VACV/processed_{RANDOM_SEED}"  # Root path for output data
+INPUT_PATH = "/bigdata/casus/MLID/maria/VIRVS_data/VACV/raw/" # Root path to input data
+OUTPUT_PATH = f"/bigdata/casus/MLID/maria/VIRVS_data/VACV/processed_{RANDOM_SEED}/"  # Root path for output data
 VAL_FRACTION = 0.2  # Fraction of data for validation set
 TEST_FRACTION = 0.1  # Fraction of data for test set
 np.random.seed(RANDOM_SEED)  # Seed for reproducible random splitting
