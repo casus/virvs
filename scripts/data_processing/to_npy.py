@@ -22,9 +22,12 @@ from os.path import isfile, join
 import numpy as np
 import tifffile as tif
 from tqdm import tqdm
-
+import os
 # Root path to preprocessed microscopy data organized by split
-PATH = "/bigdata/casus/MLID/maria/VIRVS_data/HADV/processed"
+RANDOM_SEED = os.environ['RANDOM_SEED']
+VIRUS = os.environ['VIRUS']
+
+PATH = f"/bigdata/casus/MLID/maria/VIRVS_data/{VIRUS}/processed_{RANDOM_SEED}"
 
 # Iterate over dataset splits
 for split in tqdm(["train", "val", "test"]):
