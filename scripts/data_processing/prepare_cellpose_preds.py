@@ -55,8 +55,8 @@ for split in ["train", "val", "test"]:
         
         # Run Cellpose prediction:
         # channels=[1,2] means we're using:
-        # - Channel 1 (originally red) as nucleus channel
-        # - Channel 2 (duplicated red) as cell channel
+        # - Channel 1 as nucleus channel
+        # - Channel 2 as cell channel
         # diameter=70 sets a fixed cell diameter in pixels
         masks_pred, flows, _ = model.eval(x, channels=[1, 2], diameter=70)
         masks.append(masks_pred)
