@@ -15,5 +15,5 @@ data:
   ch_in: [0]  
   
 neptune:
-  name: "Virtual_Stain"
+  name: "Virtual_Stain seeded"
   project: "mlid/test"

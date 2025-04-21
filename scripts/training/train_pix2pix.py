@@ -22,7 +22,7 @@ Output:
 import argparse
 import uuid
 from collections import defaultdict
-
+import os
 import neptune as neptune
 import numpy as np
 import tensorflow as tf
@@ -183,10 +183,14 @@ def main():
     # Print available CPUs and GPUs for training
     print("Num CPUs Available: ", len(tf.config.list_physical_devices("CPU")))
     print("Num GPUs Available: ", len(tf.config.list_physical_devices("GPU")))
+    RANDOM_SEED = os.environ["RANDOM_SEED"]
 
     # Load configuration files for data, training, evaluation, and Neptune
     config = load_config_from_yaml(args.config_path)
     data_config = create_data_config(config)
+    data_config.train_data_path = data_config.train_data_path.replace("processed", f"processed_{RANDOM_SEED}")
+    data_config.val_data_path = data_config.val_data_path.replace("processed", f"processed_{RANDOM_SEED}")
+
     training_config = create_training_config(config)
     eval_config = create_eval_config(config)
     neptune_config = create_neptune_config(config)
