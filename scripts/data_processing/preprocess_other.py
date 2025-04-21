@@ -131,7 +131,7 @@ def get_file_paths(virus: str) -> list[str]:
 
 # Prepare for data splitting - remove duplicates and shuffle
 paths = get_file_paths(VIRUS)
-
+paths = np.unique(np.array(paths))
 
 paths = np.unique(np.array(paths))
 indices = np.arange(len(paths))
