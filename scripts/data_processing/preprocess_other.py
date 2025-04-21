@@ -133,7 +133,6 @@ def get_file_paths(virus: str) -> list[str]:
 paths = get_file_paths(VIRUS)
 paths = np.unique(np.array(paths))
 
-paths = np.unique(np.array(paths))
 indices = np.arange(len(paths))
 np.random.shuffle(indices)
 paths = paths[indices]
