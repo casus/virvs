@@ -24,7 +24,7 @@ import tifffile as tif
 from tqdm import tqdm
 import os
 # Root path to preprocessed microscopy data organized by split
-RANDOM_SEED = os.environ['RANDOM_SEED']
+RANDOM_SEED = int(os.environ['RANDOM_SEED'])
 VIRUS = os.environ['VIRUS']
 
 PATH = f"/bigdata/casus/MLID/maria/VIRVS_data/{VIRUS}/processed_{RANDOM_SEED}"

@@ -22,7 +22,8 @@ import numpy as np
 import tifffile as tif
 from tqdm import tqdm
 
-RANDOM_SEED = os.environ['RANDOM_SEED']
+RANDOM_SEED = int(os.environ['RANDOM_SEED'])
+
 VIRUS = os.environ['VIRUS']
 # Configuration parameters
 VAL_FRACTION = 0.2  # Fraction of data for validation set

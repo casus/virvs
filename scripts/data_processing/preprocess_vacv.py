@@ -23,7 +23,7 @@ import tifffile as tif
 from tqdm import tqdm
 
 # Configuration parameters
-RANDOM_SEED = os.environ['RANDOM_SEED']
+RANDOM_SEED = int(os.environ['RANDOM_SEED'])
 
 
 TIMEPOINTS = [100, 108, 115]  # Specific timepoints to process
