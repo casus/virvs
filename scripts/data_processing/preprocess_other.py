@@ -57,23 +57,21 @@ def sample_norm(x, min, max):
     return n_x * 2 - 1
 
 # Channel-specific normalization parameters for different viruses
-HSV_percentiles = {
+percentiles_dict = {"HSV":{
     "w1": {"min": 0.0074, "max": 0.2907},  
     "w2": {"min": 0.0033, "max": 0.1926}, 
-}
-
-RV_percentiles = {
+},
+"RV":{
     "w1": {"min": 0.0086, "max": 0.2193},
     "w2": {"min": 0.0082, "max": 0.1712},
-}
-
-IAV_percentiles = {
+},
+"IAV":{
     "w1": {"min": 0.011, "max": 0.2156},
     "w2": {"min": 0.0091, "max": 0.1769},
 }
+}
 
-# Currently using IAV normalization - change this to select different parameters
-percentiles = IAV_percentiles
+percentiles = percentiles_dict[VIRUS]
 
 # Initialize list to store all image paths
 paths = []
