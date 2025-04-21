@@ -22,11 +22,13 @@ for config in "${configs[@]}"; do
 #SBATCH --time=24:00:00
 #SBATCH --gres=gpu:2
 #SBATCH --cpus-per-task=48
-#SBATCH --mem-per-cpu=1G
+#SBATCH --mem-per-cpu=5G
 
 module purge
 module load git
 module load cuda/12.1
+module load intel/19.0
+module load openblas/0.3.10
 
 source ~/micromamba/etc/profile.d/micromamba.sh
 micromamba activate virvs
