@@ -64,36 +64,54 @@ def read_tiff(path):
         im_stack = im_stack[:, 0]  # Take first channel
     return im_stack
 
-# Get all w1 channel paths for TimePoint 1 (used as reference)
-paths_w1 = list(Path(INPUT_PATH).glob("**/TimePoint_" + str(1) + "/*_w1.tif"))
+# # Get all w1 channel paths for TimePoint 1 (used as reference)
+# paths_w1 = list(Path(INPUT_PATH).glob("**/TimePoint_" + str(1) + "/*_w1.tif"))
 
-n_sequences = len(paths_w1)
-sequence_length = 1  # Currently processing single timepoint
+# n_sequences = len(paths_w1)
+# sequence_length = 1  # Currently processing single timepoint
 
-# Initialize array to store all paths
-paths = np.empty((n_sequences, sequence_length), dtype=object)
+# # Initialize array to store all paths
+# paths = np.empty((n_sequences, sequence_length), dtype=object)
 
-# Process specific timepoint (hardcoded to 48 for this script)
-for tdx in tqdm([48], desc="Processing timepoints"):
-    for idx in tqdm(range(n_sequences), desc="Organizing paths"):
-        # Generate paths for current timepoint by replacing TimePoint_1 with target timepoint
-        w1_path_t1 = str(paths_w1[idx])
-        w1_path = w1_path_t1.replace("TimePoint_1", "TimePoint_" + str(tdx + 1))
-        paths[idx, tdx - 48] = Path(w1_path)
+# # Process specific timepoint (hardcoded to 48 for this script)
+# for tdx in tqdm([48], desc="Processing timepoints"):
+#     for idx in tqdm(range(n_sequences), desc="Organizing paths"):
+#         # Generate paths for current timepoint by replacing TimePoint_1 with target timepoint
+#         w1_path_t1 = str(paths_w1[idx])
+#         w1_path = w1_path_t1.replace("TimePoint_1", "TimePoint_" + str(tdx + 1))
+#         paths[idx, tdx - 48] = Path(w1_path)
 
-# First pass: Save raw images (all channels) to output directory
-for paths_row in tqdm(paths, desc="Saving raw images"):
-    for path in paths_row:
-        filename = path.name
-        out_path = os.path.join(OUTPUT_PATH, "raw", filename)
+# # First pass: Save raw images (all channels) to output directory
+# for paths_row in tqdm(paths, desc="Saving raw images"):
+#     for path in paths_row:
+#         filename = path.name
+#         out_path = os.path.join(OUTPUT_PATH, "raw", filename)
         
-        # Create output directory and save all channels
-        os.makedirs(os.path.dirname(out_path), exist_ok=True)
-        tif.imwrite(out_path, tif.imread(path))  # w1 channel
-        tif.imwrite(out_path.replace("w1", "w2"), tif.imread(str(path).replace("w1", "w2")))  # w2 channel
-        tif.imwrite(out_path.replace("w1", "w4"), tif.imread(str(path).replace("w1", "w4")))  # w4 channel
+#         # Create output directory and save all channels
+#         os.makedirs(os.path.dirname(out_path), exist_ok=True)
+#         tif.imwrite(out_path, tif.imread(path))  # w1 channel
+#         tif.imwrite(out_path.replace("w1", "w2"), tif.imread(str(path).replace("w1", "w2")))  # w2 channel
+#         tif.imwrite(out_path.replace("w1", "w4"), tif.imread(str(path).replace("w1", "w4")))  # w4 channel
 
 # Shuffle paths for random split
+def get_file_paths(virus: str) -> list[str]:
+    """Returns a list of absolute paths to all files in the virus raw data directory."""
+    base_dir = Path(f"/bigdata/casus/MLID/maria/VIRVS_data/{virus}/raw/")
+    if not base_dir.exists():
+        raise FileNotFoundError(f"Directory not found: {base_dir}")
+    
+    file_paths = []
+    for root, _, files in os.walk(base_dir):
+        for file in files:
+            # should only use w1
+            if "w1" in file:
+                file_paths.append(str(Path(root) / file))
+    
+    return sorted(file_paths)
+
+# Prepare for data splitting - remove duplicates and shuffle
+paths = get_file_paths("HADV")
+
 indices = np.arange(len(paths))
 np.random.shuffle(indices)
 paths = paths[indices]

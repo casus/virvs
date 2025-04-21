@@ -73,48 +73,66 @@ percentiles_dict = {"HSV":{
 
 percentiles = percentiles_dict[VIRUS]
 
-# Initialize list to store all image paths
-paths = []
-image_extensions = [".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tif", ".tiff"]
+# # Initialize list to store all image paths
+# paths = []
+# image_extensions = [".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tif", ".tiff"]
 
-# Walk through directory structure to find all relevant images
-for suffix in SUFFIXES:
-    root_path = BASE_PATH + suffix
-    for dirpath, _, filenames in os.walk(root_path):
-        for filename in filenames:
-            file_extension = os.path.splitext(filename)[1].lower()
+# # Walk through directory structure to find all relevant images
+# for suffix in SUFFIXES:
+#     root_path = BASE_PATH + suffix
+#     for dirpath, _, filenames in os.walk(root_path):
+#         for filename in filenames:
+#             file_extension = os.path.splitext(filename)[1].lower()
             
-            # Only process supported image files
-            if file_extension in image_extensions:
-                # Different plate types have different well selection criteria
-                if "3-Screen" in root_path:
-                    # For screen plates, only use first 2 columns (wells 1-2)
-                    if any(f"{letter}{i:02d}" in filename
-                         for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                         for i in range(1, 3)):
-                        file_path = os.path.join(dirpath, filename)
-                        # Store w1 path but we'll process both channels
-                        paths.append(Path(file_path.replace("w2", "w1")))
-                else:
-                    # For other plates, use all 12 columns (wells 1-12)
-                    if any(f"{letter}{i:02d}" in filename
-                         for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                         for i in range(1, 13)):
-                        file_path = os.path.join(dirpath, filename)
-                        paths.append(Path(file_path.replace("w2", "w1")))
+#             # Only process supported image files
+#             if file_extension in image_extensions:
+#                 # Different plate types have different well selection criteria
+#                 if "3-Screen" in root_path:
+#                     # For screen plates, only use first 2 columns (wells 1-2)
+#                     if any(f"{letter}{i:02d}" in filename
+#                          for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+#                          for i in range(1, 3)):
+#                         file_path = os.path.join(dirpath, filename)
+#                         # Store w1 path but we'll process both channels
+#                         paths.append(Path(file_path.replace("w2", "w1")))
+#                 else:
+#                     # For other plates, use all 12 columns (wells 1-12)
+#                     if any(f"{letter}{i:02d}" in filename
+#                          for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+#                          for i in range(1, 13)):
+#                         file_path = os.path.join(dirpath, filename)
+#                         paths.append(Path(file_path.replace("w2", "w1")))
 
-# Save raw images (both channels) to output directory
-for path in tqdm(paths, desc="Saving raw images"):
-    filename = path.name
-    out_path = os.path.join(OUTPUT_PATH, "raw", filename)
-    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+# # Save raw images (both channels) to output directory
+# for path in tqdm(paths, desc="Saving raw images"):
+#     filename = path.name
+#     out_path = os.path.join(OUTPUT_PATH, "raw", filename)
+#     os.makedirs(os.path.dirname(out_path), exist_ok=True)
 
-    # Save both channels
-    tif.imwrite(out_path, tif.imread(path))  # w1 channel
-    tif.imwrite(out_path.replace("w1", "w2"),  # w2 channel
-               tif.imread(str(path).replace("w1", "w2")))
+#     # Save both channels
+#     tif.imwrite(out_path, tif.imread(path))  # w1 channel
+#     tif.imwrite(out_path.replace("w1", "w2"),  # w2 channel
+#                tif.imread(str(path).replace("w1", "w2")))
+
+def get_file_paths(virus: str) -> list[str]:
+    """Returns a list of absolute paths to all files in the virus raw data directory."""
+    base_dir = Path(f"/bigdata/casus/MLID/maria/VIRVS_data/{virus}/raw/")
+    if not base_dir.exists():
+        raise FileNotFoundError(f"Directory not found: {base_dir}")
+    
+    file_paths = []
+    for root, _, files in os.walk(base_dir):
+        for file in files:
+            # should only use w1
+            if "w1" in file:
+                file_paths.append(str(Path(root) / file))
+    
+    return sorted(file_paths)
 
 # Prepare for data splitting - remove duplicates and shuffle
+paths = get_file_paths(VIRUS)
+
+
 paths = np.unique(np.array(paths))
 indices = np.arange(len(paths))
 np.random.shuffle(indices)
