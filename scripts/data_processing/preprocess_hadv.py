@@ -29,7 +29,7 @@ RANDOM_SEED = int(os.environ['RANDOM_SEED'])
 
 # Configuration parameters
 INPUT_PATH = "/bigdata/casus/MLID/maria/VIRVS_data/HADV/raw"  # Root path to input data
-OUTPUT_PATH = f"/bigdata/casus/MLID/maria/VIRVS_data/HADV/processed_{RANDOM_SEED}"  # Root path for output data
+OUTPUT_PATH = f"/bigdata/casus/MLID/maria/VIRVS_data/HADV/"  # Root path for output data
 VAL_FRACTION = 0.2  # Fraction of data for validation set
 TEST_FRACTION = 0.1  # Fraction of data for test set
 
@@ -150,7 +150,7 @@ for split, paths in zip(["train", "val", "test"], [paths_train, paths_val, paths
         new_filename = f"{filename}_{timepoint}.tif"
 
         # Create output directories
-        subdir = "processed"
+        subdir = f"processed_{RANDOM_SEED}"
         out_path_x = os.path.join(OUTPUT_PATH, subdir, split, "x", new_filename)
         out_path_gt = os.path.join(OUTPUT_PATH, subdir, split, "gt", new_filename)
         os.makedirs(os.path.dirname(out_path_x), exist_ok=True)

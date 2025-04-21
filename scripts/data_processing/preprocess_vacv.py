@@ -28,7 +28,7 @@ RANDOM_SEED = int(os.environ['RANDOM_SEED'])
 
 TIMEPOINTS = [100, 108, 115]  # Specific timepoints to process
 INPUT_PATH = "/bigdata/casus/MLID/maria/VIRVS_data/VACV/raw/" # Root path to input data
-OUTPUT_PATH = f"/bigdata/casus/MLID/maria/VIRVS_data/VACV/processed_{RANDOM_SEED}/"  # Root path for output data
+OUTPUT_PATH = f"/bigdata/casus/MLID/maria/VIRVS_data/VACV/"  # Root path for output data
 VAL_FRACTION = 0.2  # Fraction of data for validation set
 TEST_FRACTION = 0.1  # Fraction of data for test set
 np.random.seed(RANDOM_SEED)  # Seed for reproducible random splitting
@@ -130,7 +130,7 @@ for split, paths in zip(["train", "val", "test"], [paths_train, paths_val, paths
         new_filename = f"{parent_dir}_{timepoint}.tif"
 
         # Create output directories
-        subdir = "processed"
+        subdir = f"processed_{RANDOM_SEED}"
         out_path_x = os.path.join(OUTPUT_PATH, subdir, split, "x", new_filename)
         out_path_gt = os.path.join(OUTPUT_PATH, subdir, split, "gt", new_filename)
         os.makedirs(os.path.dirname(out_path_x), exist_ok=True)

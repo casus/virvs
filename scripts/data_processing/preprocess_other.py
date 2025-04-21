@@ -32,7 +32,7 @@ np.random.seed(RANDOM_SEED)   # Seed for reproducible random splitting
 
 # Path configuration
 BASE_PATH = f"/bigdata/casus/MLID/maria/VIRVS_data/{VIRUS}/raw/"  # Root path to input data
-OUTPUT_PATH = f"/bigdata/casus/MLID/maria/VIRVS_data/{VIRUS}/processed_{RANDOM_SEED}/"  # Root path for output data
+OUTPUT_PATH = f"/bigdata/casus/MLID/maria/VIRVS_data/{VIRUS}/"  # Root path for output data
 
 # Plate directory suffixes to process
 SUFFIXES = [
@@ -168,7 +168,7 @@ for split, paths in zip(["train", "val", "test"], [paths_train, paths_val, paths
 
         # Prepare output filename (remove trailing _ and add .tif)
         new_filename = path.name[: path.name.rindex("_")] + ".tif"
-        subdir = "processed"
+        subdir = f"processed_{RANDOM_SEED}"
 
         # Create output paths
         out_path_x = os.path.join(OUTPUT_PATH, subdir, split, "x", new_filename)
