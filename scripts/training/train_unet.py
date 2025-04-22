@@ -17,6 +17,7 @@ Output:
 """
 
 import argparse
+import datetime
 import uuid
 from collections import defaultdict
 
@@ -163,7 +164,11 @@ def main():
     val_freq = eval_config.val_freq  # Frequency for validating the model
     max_steps = training_config.max_steps  # Maximum number of training steps
 
-    run_id = str(uuid.uuid4())  # Unique identifier for the current run
+    run_id = (
+        str(uuid.uuid4())[:4] +  # Unique identifier prefix
+        "_" +  # Separator
+        datetime.now().strftime("%Y%m%d_%H%M%S")  # Current datetime in compact format
+    )
     cumulative_loss = 0.0
     train_metrics = defaultdict(float)  # Dictionary to store accumulated metrics during training
 

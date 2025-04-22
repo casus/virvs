@@ -1,3 +1,4 @@
+from pathlib import Path
 from matplotlib import pyplot as plt
 from neptune.types import File
 
@@ -33,17 +34,22 @@ def save_output_montage(
         run_id (str): Unique identifier for the run for naming purposes.
         prefix (str): Prefix to add to the filename and Neptune log entry.
     """
-    plt.imsave(
-        f"{output_path}/images/{prefix}_output_{str(epoch)}_{run_id}.png",
-        output_montage,
-    )
+    images_dir = Path(output_path) / "images"
+    images_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Create the full save path
+    save_path = images_dir / f"{prefix}_output_{epoch}_{run_id}.png"
+    
+    # Save the image
+    plt.imsave(str(save_path), output_montage)
 
+    # Log to Neptune if run object is provided
     if run is not None:
         run[f"{prefix}_images"].append(
-            File(f"{output_path}/images/{prefix}_output_{str(epoch)}_{run_id}.png"),
+            File(str(save_path)),
             description=f"Epoch {epoch}, {prefix}",
+            name=f"{prefix}_output_{epoch}_{run_id}.png"
         )
-
 
 def save_weighs(run, model, step, output_path, run_id):
     """Saves model weights to disk and optionally logs to Neptune.
@@ -55,9 +61,16 @@ def save_weighs(run, model, step, output_path, run_id):
         output_path (str): Base directory path to save the weights.
         run_id (str): Unique identifier for the run for naming purposes.
     """
-    model.save_weights(f"{output_path}/weights/model_{str(step)}_{run_id}.h5", True)
 
+    weights_dir = Path(output_path) / "weights"
+    weights_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Create the full save path
+    save_path = weights_dir / f"model_{step}_{run_id}.h5"
+    
+    # Save model weights
+    model.save_weights(str(save_path), save_format='h5')
+
+    # Log to Neptune if run object is provided
     if run is not None:
-        run[f"model_weights/model_{str(step)}_{run_id}.h5"].upload(
-            f"{output_path}/weights/model_{str(step)}_{run_id}.h5"
-        )
+        run[f"model_weights/{save_path.name}"].upload(str(save_path))
