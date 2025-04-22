@@ -3,7 +3,7 @@ training:
   pix2pix_disc_weight: 0.5
     
 eval:
-  output_path: "outputs/"
+  output_path: "/bigdata/casus/MLID/maria/outputs/hadv_2ch"
   log_freq: 10
   val_freq: 2000
 
