@@ -1,10 +1,12 @@
-#!/bin/bash
 #SBATCH -p casus_a100
 #SBATCH -A casus
 #SBATCH --time=24:00:00
-#SBATCH --gres=gpu:2
-#SBATCH --cpus-per-task=48
-#SBATCH --mem-per-cpu=10G
+#SBATCH --gres=gpu:1             # Keeps 2 GPUs, but consider reducing to 1 if your code doesn't need multi-GPU
+#SBATCH --cpus-per-task=24       # Reduced from 48 to prevent memory overallocation
+#SBATCH --mem=240G               # Changed to total memory instead of per-cpu
+#SBATCH --nodes=1                # Explicitly request 1 node
+#SBATCH --ntasks-per-node=1      # Run 1 task per node
+#SBATCH --hint=nomultithread     # Disable hyperthreading for better memory usage
 
 module purge
 module load git
