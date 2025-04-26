@@ -17,4 +17,33 @@ module load openblas/0.3.10
 
 source ~/micromamba/etc/profile.d/micromamba.sh
 micromamba activate virvs
-python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/vacv/weights/model_100000_8ebf_20250422_080943.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/VACV/processed_43/test" --virus "vacv"
+
+# HAdV 1ch
+python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/hadv_1ch/weights/model_100000_1651_20250422_080927.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/HADV/processed_43/test" --virus "hadv_1ch"
+python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/hadv_1ch/weights/model_100000_a07c_20250422_080929.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/HADV/processed_44/test" --virus "hadv_1ch"
+python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/hadv_1ch/weights/model_100000_0ea3_20250422_080940.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/HADV/processed_45/test" --virus "hadv_1ch"
+
+# HAdV 2ch
+# python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/hadv_2ch/weights/model_100000_8ebf_20250422_080943.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/HADV/processed_43/test" --virus "hadv_2ch"
+# python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/hadv_2ch/weights/model_100000_8ebf_20250422_080943.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/HADV/processed_44/test" --virus "hadv_2ch"
+# python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/hadv_2ch/weights/model_100000_8ebf_20250422_080943.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/HADV/processed_45/test" --virus "hadv_2ch"
+
+# # HSV
+# python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/hsv/weights/model_100000_8ebf_20250422_080943.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/HSV/processed_43/test" --virus "hsv"
+# python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/hsv/weights/model_100000_8ebf_20250422_080943.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/HSV/processed_44/test" --virus "hsv"
+# python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/hsv/weights/model_100000_8ebf_20250422_080943.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/HSV/processed_45/test" --virus "hsv"
+
+# # IAV
+# python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/iav/weights/model_100000_8ebf_20250422_080943.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/IAV/processed_43/test" --virus "iav"
+# python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/iav/weights/model_100000_8ebf_20250422_080943.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/IAV/processed_44/test" --virus "iav"
+# python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/iav/weights/model_100000_8ebf_20250422_080943.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/IAV/processed_45/test" --virus "iav"
+
+# # RV
+# python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/rhv/weights/model_100000_8ebf_20250422_080943.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/RV/processed_43/test" --virus "rv"
+# python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/rhv/weights/model_100000_8ebf_20250422_080943.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/RV/processed_44/test" --virus "rv"
+# python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/rhv/weights/model_100000_8ebf_20250422_080943.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/RV/processed_45/test" --virus "rv"
+
+# # VACV
+# python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/vacv/weights/model_100000_8ebf_20250422_080943.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/VACV/processed_43/test" --virus "vacv"
+# python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/vacv/weights/model_100000_8ebf_20250422_080943.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/VACV/processed_44/test" --virus "vacv"
+# python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/vacv/weights/model_100000_8ebf_20250422_080943.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/VACV/processed_45/test" --virus "vacv"

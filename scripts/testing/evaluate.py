@@ -22,17 +22,17 @@ Output:
 
 import argparse
 from collections import defaultdict
-
+import os
 import numpy as np
 import tensorflow as tf
 from skimage.metrics import structural_similarity
 from tqdm import tqdm
-
+import csv
 from virvs.architectures.pix2pix import Generator
 from virvs.data.npy_dataloader import NpyDataloader
 from virvs.utils.evaluation_utils import round_to_1
 from virvs.utils.metrics_utils import calculate_metrics
-
+from datetime import datetime
 
 def ssim_psnr(pred, label):
     """
@@ -141,6 +141,13 @@ def main():
         ch_in=ch_in,
     )
 
+    output_dir = os.path.join(os.path.dirname(args.weights), "..", "evaluation_results")
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Create CSV filename with timestamp
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    csv_filename = os.path.join(output_dir, f"metrics_{args.virus}_{timestamp}.csv")
+                                
     # Evaluate for both models (UNet and Pix2Pix)
     dropout = args.model != "unet"  # Apply dropout only for Pix2Pix
     print(args.model, ", ", args.virus)
@@ -152,6 +159,11 @@ def main():
             # Print evaluation metrics
             for key, value in test_metrics.items():
                 print(f"{key}: {round(value, 3)}")
+            with open(csv_filename, 'w', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(['Metric', 'Value'])
+                for key, value in test_metrics.items():
+                    writer.writerow([key, round(value, 5)])
 
     else:
         seeds = [42, 43, 44]  # Seeds for averaging Pix2Pix metrics
@@ -173,5 +185,11 @@ def main():
 
         for key, value in results.items():
             print(f"{key}: mean = {round(value['mean'], 3)}, std = {round_to_1(value['std']):.1e}")
+            
+        with open(csv_filename, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(['Metric', 'Value'])
+            for key, value in test_metrics.items():
+                writer.writerow([key, round(value, 5)])
 
 main()
