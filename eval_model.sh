@@ -14,4 +14,4 @@ module load openblas/0.3.10
 
 source ~/micromamba/etc/profile.d/micromamba.sh
 micromamba activate virvs
-python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/vacv/weights/model_100000_8ebf_20250422_080943.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/VACV/processed_43/processed/test"
+python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/vacv/weights/model_100000_8ebf_20250422_080943.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/VACV/processed_43/processed/test" --virus "vacv"
