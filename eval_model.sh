@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -p casus
+#SBATCH -p casus_a100
 #SBATCH -A casus
 #SBATCH --time=24:00:00
 #SBATCH --gres=gpu:2
