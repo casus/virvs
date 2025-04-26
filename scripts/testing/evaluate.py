@@ -158,12 +158,12 @@ def main():
 
             # Print evaluation metrics
             for key, value in test_metrics.items():
-                print(f"{key}: {round(value, 3)}")
+                print(f"{key}: {value}")
             with open(csv_filename, 'w', newline='') as csvfile:
                 writer = csv.writer(csvfile)
                 writer.writerow(['Metric', 'Value'])
                 for key, value in test_metrics.items():
-                    writer.writerow([key, round(value, 5)])
+                    writer.writerow([key, value])
 
     else:
         seeds = [42, 43, 44]  # Seeds for averaging Pix2Pix metrics
@@ -184,12 +184,12 @@ def main():
             results[k] = {"mean": mean_metric, "std": std_metric}
 
         for key, value in results.items():
-            print(f"{key}: mean = {round(value['mean'], 3)}, std = {round_to_1(value['std']):.1e}")
+            print(f"{key}: mean = {value['mean']}, std = {value['std']}")
 
         with open(csv_filename, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(['Metric', 'Value'])
             for key, value in test_metrics.items():
-                writer.writerow([key, round(value, 5)])
+                writer.writerow([key, value])
 
 main()
