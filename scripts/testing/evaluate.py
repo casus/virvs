@@ -141,7 +141,7 @@ def main():
         ch_in=ch_in,
     )
 
-    output_dir = os.path.join(os.path.dirname(args.weights), "..", "evaluation_results")
+    output_dir = os.path.join("/bigdata/casus/MLID/maria/outputs/evaluation_results")
     os.makedirs(output_dir, exist_ok=True)
 
     # Create CSV filename with timestamp
@@ -185,7 +185,7 @@ def main():
 
         for key, value in results.items():
             print(f"{key}: mean = {round(value['mean'], 3)}, std = {round_to_1(value['std']):.1e}")
-            
+
         with open(csv_filename, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(['Metric', 'Value'])
