@@ -17,7 +17,7 @@ Output:
 """
 
 import argparse
-import datetime
+from datetime import datetime
 import uuid
 from collections import defaultdict
 
@@ -165,7 +165,7 @@ def main():
     max_steps = training_config.max_steps  # Maximum number of training steps
 
     run_id = (
-        str(uuid.uuid4())[:4] +  # Unique identifier prefix
+        RANDOM_SEED +  # Unique identifier prefix
         "_" +  # Separator
         datetime.now().strftime("%Y%m%d_%H%M%S")  # Current datetime in compact format
     )
