@@ -173,3 +173,5 @@ def main():
 
         for key, value in results.items():
             print(f"{key}: mean = {round(value['mean'], 3)}, std = {round_to_1(value['std']):.1e}")
+
+main()
