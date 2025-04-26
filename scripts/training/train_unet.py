@@ -93,6 +93,7 @@ def main():
 
     # Load configuration from YAML file
     RANDOM_SEED = os.environ["RANDOM_SEED"]
+    print("Random seed ", RANDOM_SEED)
 
     config = load_config_from_yaml(args.config_path)
     data_config = create_data_config(config)
