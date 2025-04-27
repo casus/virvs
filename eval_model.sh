@@ -24,7 +24,7 @@ python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/m
 python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/hadv_1ch/weights/model_100000_45_20250426_191607.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/HADV/processed_45/test" --virus "hadv_1ch"
 
 HAdV 2ch
-python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/hadv_2ch/weights/model_100000_43_20250426_191617.h" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/HADV/processed_43/test" --virus "hadv_2ch"
+python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/hadv_2ch/weights/model_100000_43_20250426_191617.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/HADV/processed_43/test" --virus "hadv_2ch"
 python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/hadv_2ch/weights/model_100000_44_20250426_191618.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/HADV/processed_44/test" --virus "hadv_2ch"
 python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/hadv_2ch/weights/model_100000_45_20250426_191607.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/HADV/processed_45/test" --virus "hadv_2ch"
 
@@ -41,7 +41,7 @@ python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/m
 # RV
 python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/rhv/weights/model_100000_43_20250426_191631.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/RV/processed_43/test" --virus "rv"
 python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/rhv/weights/model_100000_44_20250426_191701.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/RV/processed_44/test" --virus "rv"
-python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/rhv/weights/model_100000_45_20250426_191655.h55" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/RV/processed_45/test" --virus "rv"
+python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/rhv/weights/model_100000_45_20250426_191655.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/RV/processed_45/test" --virus "rv"
 
 # VACV
 python scripts/testing/evaluate.py --model unet --weights "/bigdata/casus/MLID/maria/outputs/vacv/weights/model_100000_43_20250426_191650.h5" --dataset "/bigdata/casus/MLID/maria/VIRVS_data/VACV/processed_43/test" --virus "vacv"
